@@ -1,8 +1,13 @@
 spring:
   application:
-    name: demo
+    name: prewave-demo
   datasource:
-    username: postgres
-    password: postgres
+    username: prewave
+    password: prewave
     driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5433/prewave_db
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
 
