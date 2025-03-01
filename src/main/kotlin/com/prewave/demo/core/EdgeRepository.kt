@@ -10,7 +10,7 @@ interface EdgeRepository {
      * @return true if edge was added successfully, false if it already exists
      */
     fun addEdge(edge: Edge): Boolean
-    
+
     /**
      * Deletes an existing edge from the database.
      * @param fromId The ID of the source node
@@ -18,7 +18,7 @@ interface EdgeRepository {
      * @return true if edge was deleted successfully, false if it doesn't exist
      */
     fun deleteEdge(fromId: Int, toId: Int): Boolean
-    
+
     /**
      * Checks if an edge exists between the specified nodes.
      * @param fromId The ID of the source node
@@ -34,10 +34,5 @@ interface EdgeRepository {
      */
     fun hasParent(nodeId: Int): Boolean
 
-    /**
-     * Finds all edges in a subtree for a given node.
-     * @param nodeId The ID of the node
-     * @return List of edges in the subtree
-     */
-    fun findSubtreeByNodeIdPaginated(nodeId: Int, offset: Int, limit: Int): List<Edge>
+    fun getTreeByNodeId(nodeId: Int, givenMaxDepth: Int = 100): List<Edge>
 }
