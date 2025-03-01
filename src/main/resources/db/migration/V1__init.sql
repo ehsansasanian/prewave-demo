@@ -7,5 +7,5 @@ CREATE TABLE edge
     CHECK (from_id != to_id)
 );
 
--- CREATE INDEX idx_edge_from_id ON edge (from_id);
--- CREATE INDEX idx_edge_to_id ON edge (to_id);
+CREATE INDEX idx_edge_from_id ON edge (from_id);
+CREATE INDEX idx_edge_to_id ON edge (to_id);
