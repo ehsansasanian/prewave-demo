@@ -20,23 +20,24 @@ interface EdgeRepository {
     fun deleteEdge(fromId: Int, toId: Int): Boolean
     
     /**
-     * Retrieves all edges from the database.
-     * @return List of all edges
-     */
-    fun getAllEdges(): List<Edge>
-    
-    /**
      * Checks if an edge exists between the specified nodes.
      * @param fromId The ID of the source node
      * @param toId The ID of the target node
      * @return true if the edge exists, false otherwise
      */
     fun edgeExists(fromId: Int, toId: Int): Boolean
-    
+
     /**
-     * Finds all direct children (outgoing edges) for a given node.
-     * @param nodeId The ID of the node
-     * @return List of edges where the given node is the source
+     * Checks if a node already has a parent (any incoming edge)
+     * @param nodeId The ID of the node to check
+     * @return true if the node already has a parent, false otherwise
      */
-    fun findChildrenByNodeId(nodeId: Int): List<Edge>
+    fun hasParent(nodeId: Int): Boolean
+
+    /**
+     * Finds all edges in a subtree for a given node.
+     * @param nodeId The ID of the node
+     * @return List of edges in the subtree
+     */
+    fun findSubtreeByNodeIdPaginated(nodeId: Int, offset: Int, limit: Int): List<Edge>
 }

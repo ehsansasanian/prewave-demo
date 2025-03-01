@@ -3,7 +3,8 @@ package com.prewave.demo.core
 /*
  * Edge represents a connection between two companies in the supply chain
  * No FK constraints are implemented as not requested in the task
- * There is one supply chain tree
+ * There is one supply chain tree –– This can be extended to have multiple trees. For simplicity, the implementation is for a single tree.
+ * I initialized the root as: from_id = -1, to_id = <POSITIVE INTEGER>
  */
 data class Edge(val fromId: Int, val toId: Int)
 
@@ -24,9 +25,5 @@ class Node(val id: Int) {
 
     fun hasChild(nodeId: Int): Boolean {
         return children.any { it.id == nodeId }
-    }
-
-    fun getId(): Int {
-        return id
     }
 }
