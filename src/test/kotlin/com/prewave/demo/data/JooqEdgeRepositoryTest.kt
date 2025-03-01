@@ -28,7 +28,7 @@ class JooqEdgeRepositoryTest : TestContainerConfig() {
         val edge = Edge(1, 2)
 
         assertTrue { edgeRepository.addEdge(edge) }
-        assertTrue { edgeRepository.edgeExists(1, 2) }
+        assertTrue { edgeRepository.edgeExists(edge) }
     }
 
     @Test
@@ -40,12 +40,13 @@ class JooqEdgeRepositoryTest : TestContainerConfig() {
 
     @Test
     fun `deleteEdge should successfully delete an existing edge`() {
-        edgeRepository.addEdge(Edge(1, 2))
-        assertTrue { edgeRepository.edgeExists(1, 2) }
+        val edge = Edge(1, 2)
+        edgeRepository.addEdge(edge)
+        assertTrue { edgeRepository.edgeExists(edge) }
 
         val result = edgeRepository.deleteEdge(1, 2)
         assertTrue { result }
-        assertFalse { edgeRepository.edgeExists(1, 2) }
+        assertFalse { edgeRepository.edgeExists(edge) }
     }
 
     @Test

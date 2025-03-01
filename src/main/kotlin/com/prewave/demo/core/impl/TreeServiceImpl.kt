@@ -20,7 +20,7 @@ class TreeServiceImpl(private val edgeRepository: EdgeRepository) : TreeService 
     }
 
     override fun deleteEdge(fromId: Int, toId: Int): Boolean {
-        if (!edgeRepository.edgeExists(fromId, toId)) {
+        if (!edgeRepository.edgeExists(Edge(fromId, toId))) {
             throw EdgeNotFoundException("Edge from $fromId to $toId does not exist")
         }
 
@@ -48,7 +48,7 @@ class TreeServiceImpl(private val edgeRepository: EdgeRepository) : TreeService 
         }
 
         // No Duplicate edges –> if Edge already exists
-        if (edgeRepository.edgeExists(edge.fromId, edge.toId)) {
+        if (edgeRepository.edgeExists(edge)) {
             throw EdgeOperationNotAllowedException("Edge from ${edge.fromId} to ${edge.toId} already exists.")
         }
 
@@ -60,7 +60,7 @@ class TreeServiceImpl(private val edgeRepository: EdgeRepository) : TreeService 
         }
 
         // Target node can not be root node
-        if (edgeRepository.edgeExists(ROOT_FROM_ID, edge.toId)) {
+        if (edgeRepository.edgeExists(Edge(ROOT_FROM_ID, edge.toId))) {
             throw EdgeOperationNotAllowedException("Adding this edge would create a cycle.")
         }
     }

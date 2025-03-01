@@ -25,7 +25,7 @@ interface EdgeRepository {
      * @param toId The ID of the target node
      * @return true if the edge exists, false otherwise
      */
-    fun edgeExists(fromId: Int, toId: Int): Boolean
+    fun edgeExists(edge: Edge): Boolean
 
     /**
      * Checks if a node already has a parent (any incoming edge)

@@ -2,6 +2,7 @@ package com.prewave.demo.data
 
 import com.prewave.demo.core.Edge
 import com.prewave.demo.core.EdgeRepository
+import com.prewave.demo.core.Node
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
@@ -11,7 +12,7 @@ class JooqEdgeRepository(private val dsl: DSLContext) : EdgeRepository {
     private val logger = LoggerFactory.getLogger(javaClass)
 
     override fun addEdge(edge: Edge): Boolean {
-        if (edgeExists(edge.fromId, edge.toId)) {
+        if (edgeExists(edge)) {
             return false
         }
 
@@ -33,12 +34,12 @@ class JooqEdgeRepository(private val dsl: DSLContext) : EdgeRepository {
             .execute() > 0
     }
 
-    override fun edgeExists(fromId: Int, toId: Int): Boolean {
+    override fun edgeExists(edge: Edge): Boolean {
         return dsl.fetchExists(
             dsl.selectOne()
                 .from(Tables.EDGETable)
-                .where(Tables.EDGETable.FROM_ID.eq(fromId))
-                .and(Tables.EDGETable.TO_ID.eq(toId))
+                .where(Tables.EDGETable.FROM_ID.eq(edge.fromId))
+                .and(Tables.EDGETable.TO_ID.eq(edge.toId))
         )
     }
 
