@@ -6,11 +6,14 @@ import com.prewave.demo.core.Node
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
+import org.springframework.transaction.annotation.Transactional
 
 @Repository
+@Transactional(readOnly = true)
 class JooqEdgeRepository(private val dsl: DSLContext) : EdgeRepository {
     private val logger = LoggerFactory.getLogger(javaClass)
 
+    @Transactional
     override fun addEdge(edge: Edge): Boolean {
         if (edgeExists(edge)) {
             return false
@@ -27,6 +30,7 @@ class JooqEdgeRepository(private val dsl: DSLContext) : EdgeRepository {
         }
     }
 
+    @Transactional
     override fun deleteEdge(fromId: Int, toId: Int): Boolean {
         return dsl.deleteFrom(Tables.EDGETable)
             .where(Tables.EDGETable.FROM_ID.eq(fromId))
@@ -121,5 +125,42 @@ class JooqEdgeRepository(private val dsl: DSLContext) : EdgeRepository {
         }
 
         return nodeCache[nodeId]
+    }
+
+    @Transactional
+    override fun reassignChildrenToGrandparent(nodeId: Int, parentNodeId: Int): Boolean {
+        try {
+            // Find the parent of the current node
+            val grandparentId = dsl.select(Tables.EDGETable.FROM_ID)
+                .from(Tables.EDGETable)
+                .where(Tables.EDGETable.TO_ID.eq(nodeId))
+                .fetchOneInto(Int::class.java)
+                ?: return false
+
+            if (grandparentId != parentNodeId) return false
+
+            val childrenIds = dsl.select(Tables.EDGETable.TO_ID)
+                .from(Tables.EDGETable)
+                .where(Tables.EDGETable.FROM_ID.eq(nodeId))
+                .fetch(Tables.EDGETable.TO_ID)
+
+            if (childrenIds.isEmpty()) {
+                return true
+            }
+
+            // Update each child's parent to be the grandparent
+            for (childId in childrenIds) {
+                dsl.update(Tables.EDGETable)
+                    .set(Tables.EDGETable.FROM_ID, grandparentId)
+                    .where(Tables.EDGETable.FROM_ID.eq(nodeId))
+                    .and(Tables.EDGETable.TO_ID.eq(childId))
+                    .execute()
+            }
+
+            return true
+        } catch (e: Exception) {
+            logger.error("Failed to reassign children of node $nodeId to its parent", e)
+            return false
+        }
     }
 }

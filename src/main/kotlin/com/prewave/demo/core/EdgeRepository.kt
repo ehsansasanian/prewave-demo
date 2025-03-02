@@ -44,4 +44,6 @@ interface EdgeRepository {
      * @return The node with its complete tree structure, or null if node doesn't exist
      */
     fun getNodeTreeByNodeId(nodeId: Int, maxDepth: Int = 100): Node?
+
+    fun reassignChildrenToGrandparent(nodeId: Int, parentNodeId: Int): Boolean
 }

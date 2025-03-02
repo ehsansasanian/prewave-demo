@@ -42,9 +42,11 @@ class TreeServiceImplTest {
         val fromId = 1
         val toId = 2
         `when`(edgeRepository.edgeExists(Edge(fromId, toId))).thenReturn(true)
+        `when`(edgeRepository.reassignChildrenToGrandparent(toId, fromId)).thenReturn(true)
         `when`(edgeRepository.deleteEdge(fromId, toId)).thenReturn(true)
 
         assertTrue(treeService.deleteEdge(fromId, toId))
+        verify(edgeRepository).reassignChildrenToGrandparent(toId, fromId)
         verify(edgeRepository).deleteEdge(fromId, toId)
     }
 

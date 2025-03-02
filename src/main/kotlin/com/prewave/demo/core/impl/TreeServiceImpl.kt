@@ -7,30 +7,55 @@ import com.prewave.demo.core.TreeService
 import com.prewave.demo.core.exceptions.EdgeNotFoundException
 import com.prewave.demo.core.exceptions.EdgeOperationNotAllowedException
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 @Service
+@Transactional(readOnly = true)
 class TreeServiceImpl(private val edgeRepository: EdgeRepository) : TreeService {
+
     private companion object {
         const val ROOT_FROM_ID = -1
     }
 
+    @Transactional
     override fun addEdge(edge: Edge): Boolean {
         validateEdgeForAddition(edge)
         return edgeRepository.addEdge(edge)
     }
 
+    /*
+    * I was not sure how the delete should function.
+    * 1. Should it create a new tree by detaching the subtree?
+    * 2. Or should it only remove the edge and assign the children of 'to_id' to 'from_id'?
+    * I proceeded wit the latter.
+    * */
+    @Transactional
     override fun deleteEdge(fromId: Int, toId: Int): Boolean {
-        if (!edgeRepository.edgeExists(Edge(fromId, toId))) {
-            throw EdgeNotFoundException("Edge from $fromId to $toId does not exist")
-        }
-
         // Since I allowed only one tree in the system, the root can not be deleted.
         // Otherwise, the system will end up with multiple trees.
         if (ROOT_FROM_ID == fromId) {
             throw EdgeOperationNotAllowedException("Root node can not be deleted.")
         }
 
-        return edgeRepository.deleteEdge(fromId, toId)
+        if (!edgeRepository.edgeExists(Edge(fromId, toId))) {
+            throw EdgeNotFoundException("Edge from $fromId to $toId does not exist")
+        }
+
+        val reassign = edgeRepository.reassignChildrenToGrandparent(toId, fromId)
+
+        if (!reassign) {
+            // more sophisticated error handling can be done here
+            throw EdgeOperationNotAllowedException("Edge could not be deleted.")
+        }
+
+        val deleteEdge = edgeRepository.deleteEdge(fromId, toId)
+
+        if (!deleteEdge) {
+            // more sophisticated error handling can be done here
+            throw EdgeOperationNotAllowedException("Edge could not be deleted.")
+        }
+
+        return true
     }
 
     override fun getTreeByNodeId(rootId: Int): Node? {

@@ -84,5 +84,36 @@ class JooqEdgeRepositoryTest : TestContainerConfig() {
         assertEquals(9, countNodes(treeMap))
     }
 
+    @Test
+    fun `reassignChildrenToGrandparent should handle reassignment with multiple children`() {
+        // 1 -> 2 -> 3, 4, 5
+        //   -> 6
+        edgeRepository.addEdge(Edge(1, 2))
+        edgeRepository.addEdge(Edge(1, 6))
+        edgeRepository.addEdge(Edge(2, 3))
+        edgeRepository.addEdge(Edge(2, 4))
+        edgeRepository.addEdge(Edge(2, 5))
+
+        // Reassign all children of 2 to be direct children of 1
+        val result = edgeRepository.reassignChildrenToGrandparent(2, 1)
+
+        // Verify result
+        assertTrue(result)
+
+        // Original links should be gone
+        assertFalse(edgeRepository.edgeExists(Edge(2, 3)))
+        assertFalse(edgeRepository.edgeExists(Edge(2, 4)))
+        assertFalse(edgeRepository.edgeExists(Edge(2, 5)))
+
+        // New links should exist
+        assertTrue(edgeRepository.edgeExists(Edge(1, 3)))
+        assertTrue(edgeRepository.edgeExists(Edge(1, 4)))
+        assertTrue(edgeRepository.edgeExists(Edge(1, 5)))
+
+        // Unchanged links should remain
+        assertTrue(edgeRepository.edgeExists(Edge(1, 2)))
+        assertTrue(edgeRepository.edgeExists(Edge(1, 6)))
+    }
+
     // TODO: more tests ...
 }
