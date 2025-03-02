@@ -21,6 +21,19 @@ class EdgeController(private val treeService: TreeService) {
         return ResponseEntity.status(HttpStatus.CREATED).body(mapOf("message" to "Edge created successfully"))
     }
 
+    @DeleteMapping("/{fromId}/{toId}")
+    fun deleteEdge(
+        @PathVariable @Min(value = 1, message = "From node ID must be greater than 0") fromId: Int,
+        @PathVariable @Min(value = 1, message = "To node ID must be greater than 0") toId: Int
+    ): ResponseEntity<Any> {
+        val result = treeService.deleteEdge(fromId, toId)
+        return if (result) {
+            ResponseEntity.ok(mapOf("message" to "Edge deleted successfully"))
+        } else {
+            ResponseEntity.status(HttpStatus.NOT_FOUND).body(mapOf("message" to "Edge not found"))
+        }
+    }
+
     @GetMapping("/{nodeId}/tree")
     fun getTree(
         @PathVariable @Min(value = 1, message = "Node ID must be greater than 0") nodeId: Int
