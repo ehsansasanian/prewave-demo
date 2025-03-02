@@ -107,6 +107,10 @@ The script creates the following tree structure:
             20
 ```
 
+### Tear Down
+
+Stop the services with Docker Compose: `docker-compose down`
+
 ### Further Considerations
 
 Please note due to time constraints, the project has a poor test coverage. This might lead to some unexpected issues. But of course, I am happy to discuss the project further and improve it if needed.
