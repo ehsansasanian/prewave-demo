@@ -34,5 +34,14 @@ interface EdgeRepository {
      */
     fun hasParent(nodeId: Int): Boolean
 
-    fun getTreeByNodeId(nodeId: Int, givenMaxDepth: Int = 100): List<Edge>
+    /**
+     * Retrieves a node and its tree structure based on the node ID.
+     * Note: This method would typically belong in NodeRepository, but due to 
+     * architectural simplifications (no separate node table), it's implemented here.
+     * 
+     * @param nodeId The ID of the node to retrieve
+     * @param maxDepth Maximum depth of the tree to retrieve (to prevent infinite recursion)
+     * @return The node with its complete tree structure, or null if node doesn't exist
+     */
+    fun getNodeTreeByNodeId(nodeId: Int, maxDepth: Int = 100): Node?
 }

@@ -33,8 +33,8 @@ class TreeServiceImpl(private val edgeRepository: EdgeRepository) : TreeService 
         return edgeRepository.deleteEdge(fromId, toId)
     }
 
-    override fun getTreeByNodeId(rootId: Int): Node {
-        return Node(-2)
+    override fun getTreeByNodeId(rootId: Int): Node? {
+        return edgeRepository.getNodeTreeByNodeId(rootId)
     }
 
     private fun validateEdgeForAddition(edge: Edge) {

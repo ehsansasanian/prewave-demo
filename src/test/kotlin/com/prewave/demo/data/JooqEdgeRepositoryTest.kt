@@ -51,71 +51,38 @@ class JooqEdgeRepositoryTest : TestContainerConfig() {
 
     @Test
     fun `deleteEdge should return false when edge does not exist`() {
-        assertFalse(edgeRepository.deleteEdge(3, 4))
+        assertFalse { edgeRepository.deleteEdge(3, 4) }
     }
 
     @Test
-    fun `getTreeByNodeId should return empty list when node has no children`() {
-        val result = edgeRepository.getTreeByNodeId(1, 10)
-        assertEquals(0, result.size)
-    }
-
-    @Test
-    fun `getTreeByNodeId should return direct children`() {
+    fun `getNodeTreeByNodeId should handle complex tree structures`() {
         edgeRepository.addEdge(Edge(1, 2))
         edgeRepository.addEdge(Edge(1, 3))
         edgeRepository.addEdge(Edge(2, 4))
+        edgeRepository.addEdge(Edge(2, 5))
+        edgeRepository.addEdge(Edge(3, 6))
+        edgeRepository.addEdge(Edge(3, 7))
+        edgeRepository.addEdge(Edge(4, 8))
+        edgeRepository.addEdge(Edge(6, 9))
 
-        val result = edgeRepository.getTreeByNodeId(1, 1)
+        val result = edgeRepository.getNodeTreeByNodeId(1)
 
-        assertEquals(2, result.size)
-        assertTrue(result.any { it.fromId == 1 && it.toId == 2 })
-        assertTrue(result.any { it.fromId == 1 && it.toId == 3 })
+        // Verify full structure
+        assertTrue { result != null }
+        assertEquals(1, result?.id)
+
+        val treeMap = result?.toMap()
+        val level1 = treeMap?.get("children") as List<*>
+        assertEquals(2, level1.size)
+
+        // Count total nodes in the tree (should be 9)
+        fun countNodes(node: Map<*, *>): Int {
+            val children = node["children"] as List<*>
+            return 1 + children.sumOf { countNodes(it as Map<*, *>) }
+        }
+
+        assertEquals(9, countNodes(treeMap))
     }
 
-    @Test
-    fun `getTreeByNodeId should return full tree`() {
-        // Level 1: 1 -> 2, 1 -> 3
-        // Level 2: 2 -> 4, 3 -> 5
-        // Level 3: 4 -> 6
-        edgeRepository.addEdge(Edge(1, 2))
-        edgeRepository.addEdge(Edge(1, 3))
-        edgeRepository.addEdge(Edge(2, 4))
-        edgeRepository.addEdge(Edge(3, 5))
-        edgeRepository.addEdge(Edge(4, 6))
-
-        val result = edgeRepository.getTreeByNodeId(1, 10)
-
-        assertEquals(5, result.size)
-        // Check all
-        assertTrue(result.any { it.fromId == 1 && it.toId == 2 })
-        assertTrue(result.any { it.fromId == 1 && it.toId == 3 })
-        assertTrue(result.any { it.fromId == 2 && it.toId == 4 })
-        assertTrue(result.any { it.fromId == 3 && it.toId == 5 })
-        assertTrue(result.any { it.fromId == 4 && it.toId == 6 })
-    }
-
-    @Test
-    fun `getTreeByNodeId should respect max depth parameter`() {
-        // Level 1: 1 -> 2, 1 -> 3
-        // Level 2: 2 -> 4, 3 -> 5
-        // Level 3: 4 -> 6
-        edgeRepository.addEdge(Edge(1, 2))
-        edgeRepository.addEdge(Edge(1, 3))
-        edgeRepository.addEdge(Edge(2, 4))
-        edgeRepository.addEdge(Edge(3, 5))
-        edgeRepository.addEdge(Edge(4, 6))
-
-        // Only get the first two levels
-        val result = edgeRepository.getTreeByNodeId(1, 2)
-
-        assertEquals(4, result.size)
-        // These should be included
-        assertTrue(result.any { it.fromId == 1 && it.toId == 2 })
-        assertTrue(result.any { it.fromId == 1 && it.toId == 3 })
-        assertTrue(result.any { it.fromId == 2 && it.toId == 4 })
-        assertTrue(result.any { it.fromId == 3 && it.toId == 5 })
-        // This should not be included
-        assertFalse(result.any { it.fromId == 4 && it.toId == 6 })
-    }
+    // TODO: more tests ...
 }

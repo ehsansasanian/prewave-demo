@@ -19,11 +19,10 @@ class Node(val id: Int) {
         children.add(node)
     }
 
-    fun getChildren(): List<Node> {
-        return children.toList()
-    }
-
-    fun hasChild(nodeId: Int): Boolean {
-        return children.any { it.id == nodeId }
+    fun toMap(): Map<String, Any> {
+        return mapOf(
+            "id" to id,
+            "children" to children.map { it.toMap() }
+        )
     }
 }

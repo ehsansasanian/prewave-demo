@@ -26,5 +26,5 @@ interface TreeService {
      * @return The root Node with all its descendants
      * @throws IllegalArgumentException if the node doesn't exist
      */
-    fun getTreeByNodeId(rootId: Int): Node
+    fun getTreeByNodeId(rootId: Int): Node?
 }

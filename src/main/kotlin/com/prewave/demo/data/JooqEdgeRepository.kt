@@ -51,45 +51,75 @@ class JooqEdgeRepository(private val dsl: DSLContext) : EdgeRepository {
         )
     }
 
-    /*
-    * Alternatively, a cursor based query can be used to fetch the data in chunks which has better memory management.
-    * */
-    override fun getTreeByNodeId(nodeId: Int, givenMaxDepth: Int): List<Edge> {
-        val maxDepth = maxOf(givenMaxDepth, 1)
-
-        val hasChildren = dsl.fetchExists(
+    override fun getNodeTreeByNodeId(nodeId: Int, maxDepth: Int): Node? {
+        val nodeExists = dsl.fetchExists(
             dsl.selectOne()
                 .from(Tables.EDGETable)
                 .where(Tables.EDGETable.FROM_ID.eq(nodeId))
+                .or(Tables.EDGETable.TO_ID.eq(nodeId))
         )
 
-        if (!hasChildren) {
-            return emptyList()
+        if (!nodeExists) {
+            val isLeafNode = dsl.fetchExists(
+                dsl.selectOne()
+                    .from(Tables.EDGETable)
+                    .where(Tables.EDGETable.TO_ID.eq(nodeId))
+            )
+
+            return if (isLeafNode) Node(nodeId) else null
         }
 
-        // If the tree has a large number of nodes, this can lead to memory overflow too.
-        // Maybe then using a cursor based query is better.
+        // Alternatively, a cursor based query can be used to fetch the data in chunks which has better memory management.
         val recursiveQuery = """
             WITH RECURSIVE subtree AS (
-                SELECT 1 AS depth, from_id, to_id
+                SELECT from_id as parent_id, to_id as child_id, 1 AS depth
                 FROM edge
                 WHERE from_id = {0}
                 
                 UNION ALL
                 
-                -- Recursive case: children of children
-                SELECT s.depth + 1, e.from_id, e.to_id
+                SELECT e.from_id as parent_id, e.to_id as child_id, s.depth + 1
                 FROM edge e
-                JOIN subtree s ON e.from_id = s.to_id
+                JOIN subtree s ON e.from_id = s.child_id
                 WHERE s.depth < {1}
             )
-            SELECT from_id, to_id FROM subtree
+            SELECT parent_id, child_id FROM subtree
         """
 
-        val result = dsl.resultQuery(recursiveQuery, nodeId, maxDepth)
-            .fetch()
-            .map { Edge(it.getValue("from_id", Int::class.java), it.getValue("to_id", Int::class.java)) }
+        val edgeRows = dsl.resultQuery(recursiveQuery, nodeId, maxDepth).fetch()
 
-        return result
+        if (edgeRows.isEmpty()) {
+            return Node(nodeId)
+        }
+
+        val nodeMap = mutableMapOf<Int, MutableList<Int>>()
+        edgeRows.forEach { record ->
+            val parentId = record.getValue("parent_id", Int::class.java)
+            val childId = record.getValue("child_id", Int::class.java)
+            nodeMap.getOrPut(parentId) { mutableListOf() }.add(childId)
+        }
+
+
+        // Build node tree
+        val nodeCache = mutableMapOf<Int, Node>()
+
+        fun getOrCreateNode(id: Int): Node {
+            return nodeCache.getOrPut(id) { Node(id) }
+        }
+
+        // Create all nodes
+        nodeMap.forEach { (parentId, _) ->
+            getOrCreateNode(parentId)
+        }
+
+        // Add children to parents
+        nodeMap.forEach { (parentId, childIds) ->
+            val parentNode = getOrCreateNode(parentId)
+            childIds.forEach { childId ->
+                parentNode.addChild(getOrCreateNode(childId))
+            }
+        }
+
+        return nodeCache[nodeId]
     }
 }
