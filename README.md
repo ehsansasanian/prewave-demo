@@ -46,7 +46,7 @@ This project provides a service for managing hierarchical data in a tree structu
 ## Testing
 
 * If you will be using a browser, please be careful with the browser asking for favicon – requesting it might result seeing some error messages in the
-   console as it's added to the project
+   console as it's not added to the project
 
 1. Make sure your API service is running and accessible at http://localhost:8080 via:
 
